@@ -10,6 +10,7 @@ npm install --save-dev @types/es6-collections
 cd /ikea # or any new folder
 npm install node-tradfri-client
 npm install babel-polyfill
+npm install moment
 
 cp config.templ.ts config.ts
 # modify config.ts for your needs
