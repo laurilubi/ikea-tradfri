@@ -1,4 +1,5 @@
 /config.ts
 /decisionMaker.ts
+/log
 /node_modules
 package-lock.json
