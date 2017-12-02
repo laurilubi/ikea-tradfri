@@ -1,12 +1,21 @@
-cd /ikea # or any new folder
-
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
 npm install -g typescript
 npm install -g ts-node
+npm install -g moment
 npm install --save-dev @types/es6-promise
 npm install --save-dev @types/es6-collections
 
-cd /ikea
+cd /ikea # or any new folder
 npm install node-tradfri-client
+npm install babel-polyfill
+
+cp config.templ.ts config.ts
+# modify config.ts for your needs
+
+cp decisionMaker.templ.ts decisionMaker.ts
+# modify decisionMaker.ts for your needs
+
+# execute
+ts-node tradfri.ts >> log
