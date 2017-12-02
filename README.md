@@ -24,6 +24,7 @@ For kali linux, run:
 `npm install --save-dev @types/es6-collections`
 
 - Install folder-local nodejs packages
+
 These can also be global if you want.
 
 `cd /ikea` # or any new folder
@@ -31,13 +32,17 @@ These can also be global if you want.
 `npm install node-tradfri-client babel-polyfill moment`
 
 - Set your configuration
+
 `cp config.templ.ts config.ts`
 
 Modify `config.ts` for your needs.
 
 - Set your scheduling
+
 `cp decisionMaker.templ.ts decisionMaker.ts`
+
 Modify `decisionMaker.ts` for your needs.
 
-- execute
+- Execute
+
 `ts-node tradfri.ts >> log`
