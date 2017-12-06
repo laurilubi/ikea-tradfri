@@ -29,7 +29,7 @@ These can also be global if you want.
 
 `cd /ikea` # or any new folder
 
-`npm install node-tradfri-client babel-polyfill moment`
+`npm install node-tradfri-client babel-polyfill moment axios`
 
 - Set your configuration
 
