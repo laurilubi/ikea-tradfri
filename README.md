@@ -1,8 +1,11 @@
 # ikea-tradfri
 Dynamic scheduling of ikea lights via Ikea Gateway
 
+# Features
+- Control light groups in detail
+- Times based on local sunrise and sunset
+
 # Plans
-- Times based on sunrise and sunset
 - No one at home runs low-energy but sometimes changes happen
 - Detect that no one is at home by wifi and mobiles
 
