@@ -1,11 +1,13 @@
 import { Group, TradfriClient, AccessoryTypes, Accessory } from 'node-tradfri-client/build';
 import { config } from "./config";
 import { Decision, DecisionMaker } from './decisionMaker';
+import { SunProvider, GeoPosition } from './sunProvider';
 
 const tradfri = new TradfriClient(config.addr);
 const groups = {};
 const lights = {};
-const decisionMaker = new DecisionMaker();
+const sunProvider = new SunProvider(config.geo);
+const decisionMaker = new DecisionMaker(sunProvider);
 
 var handleConnect = async function (): Promise<void> {
 	log(`Connecting to ${config.addr} ...`);
@@ -68,8 +70,10 @@ var handleLights = async function (): Promise<void> {
 };
 
 var pollForDecisions = function () {
+	sunProvider.getTimes(); // trigger load from external API
+
 	log("Polling for decisions from now on");
-	setTimeout(makeDecisions, 1);
+	//setTimeout(makeDecisions, 1);
 	setInterval(makeDecisions, 15 * 1000);
 };
 
