@@ -58,9 +58,10 @@ var handleLights = async function (): Promise<void> {
 
 			if (device.type !== AccessoryTypes.lightbulb) return;
 			var light = device.lightList[0];
+			var power = light.onOff ? light.dimmer : 0;
 			var colorTempStr = light.colorTemperature == null ? "" : ` (${light.colorTemperature}°)`;
 			var isDeadStr = device.alive ? "" : " (dead)";
-			log(`- light ${device.instanceId} dimmer=${light.dimmer}${colorTempStr} ${device.name} ${isDeadStr}`);
+			log(`- light ${device.instanceId} power=${power}${colorTempStr} ${device.name} ${isDeadStr}`);
 			lights[device.instanceId] = device;
 		};
 
@@ -107,13 +108,18 @@ var operateGroup = async function (group: Group, decision: Decision) {
 
 		var success = null;
 		var logInfo = "";
-		if (decision.onOff != null) {
-			success = await light.toggle(decision.onOff);
-			logInfo = `toggle=${decision.onOff}`;
-		}
-		if (decision.dimmer != null) {
-			success = await light.setBrightness(decision.dimmer, config.transitionTime);
-			logInfo = `dimmer=${decision.dimmer}`;
+		// if (decision.onOff != null) {
+		// 	success = await light.toggle(decision.onOff);
+		// 	logInfo = `toggle=${decision.onOff}`;
+		// }
+		if (decision.power != null) {
+			if (decision.power === 0) {
+				success = await light.toggle(false);
+			} else {
+				success = await light.setBrightness(decision.power, config.transitionTime);
+				success &= await light.toggle(true);
+			}
+			logInfo = `power=${decision.power}`;
 		}
 		if (decision.color != null) {
 			success = await light.setHue(decision.color, config.transitionTime);

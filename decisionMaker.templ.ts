@@ -2,13 +2,16 @@ import { SunProvider, SunInfo } from './sunProvider';
 import { Group } from 'node-tradfri-client/build';
 import * as moment from "moment";
 import * as babel from "babel-polyfill";
+import { Logger } from './logger';
 
 export class DecisionMaker {
+	private logger: Logger;
 	private sunProvider: SunProvider;
 	private sunUpdated: Date = null;
 
-	constructor(sunProvider: SunProvider) {
+	constructor(sunProvider: SunProvider, logger: Logger) {
 		this.sunProvider = sunProvider;
+		this.logger = logger;
 	}
 
 	private printSunTimes() {
@@ -19,10 +22,10 @@ export class DecisionMaker {
 		// for log-file only
 		// include the sun-relative times that you use in conditions
 		// sorted from earliest to latest
-		console.log(`sunrise - 00:30 = ${this.sunrise("-00:30")}`);
-		console.log(`sunrise         = ${this.sunrise()}`);
-		console.log(`sunrise + 01:30 = ${this.sunrise("01:30")}`);
-		console.log(`sunset          = ${this.sunset()}`);
+		this.logger.log(`sunrise - 00:30 = ${this.sunrise("-00:30")}`);
+		this.logger.log(`sunrise         = ${this.sunrise()}`);
+		this.logger.log(`sunrise + 01:30 = ${this.sunrise("01:30")}`);
+		this.logger.log(`sunset          = ${this.sunset()}`);
 	}
 
 	public makeDecision(group: Group): Decision {
@@ -37,7 +40,7 @@ export class DecisionMaker {
 			// condition for group and time
 			// switch to softer color/temperature in the living room at 19:00
 			return new Decision({
-				dimmer: 50, // 50% dimmed
+				power: 50, // 50% dimmed
 				colorTemp: 100 // 0, 63, 100
 			});
 		} else if ((group.name === "Bed room" || group.name === "Living room")
@@ -48,27 +51,27 @@ export class DecisionMaker {
 			// - also later at 00:30 if you turned them on manuallt
 			// - in the morning if you forgot
 			return new Decision({
-				dimmer: 0
+				power: 0
 			});
 		} else if (group.name === "Hall") {
 			// turn on and off at specific times
 			if (time === "16:00" || time === "23:15") {
 				return new Decision({
-					dimmer: 1 // lowest possible light
+					power: 1 // lowest possible light
 				});
 			} else if (time === "08:00") {
 				return new Decision({
-					dimmer: 0
+					power: 0
 				});
 			}
 		} else if (group.name === "Outdoor") {
 			if (time === this.sunset()) {
 				return new Decision({
-					dimmer: 95
+					power: 95
 				});
 			} else if (time === this.sunrise()) {
 				return new Decision({
-					dimmer: 0
+					power: 0
 				});
 			}
 		}
@@ -79,25 +82,24 @@ export class DecisionMaker {
 	private sunrise(hhmm = "00:00"): string {
 		var diff = moment.duration(`${hhmm}:00.000`);
 		var time = this.sunProvider.getTimes().sunrise.add(diff);
-		// console.log(hhmm);
-		// console.log(diff);
-		// console.log(time);
+		// this.logger.log(hhmm);
+		// this.logger.log(diff);
+		// this.logger.log(time);
 		return time.format("HH:mm");
 	}
 
 	private sunset(hhmm = "00:00"): string {
 		var diff = moment.duration(hhmm);
 		var time = this.sunProvider.getTimes().sunset.add(diff);
-		// console.log(hhmm);
-		// console.log(diff);
-		// console.log(time);
+		// this.logger.log(hhmm);
+		// this.logger.log(diff);
+		// this.logger.log(time);
 		return time.format("HH:mm");
 	}
 }
 
 export class Decision {
-	public onOff: boolean = null;
-	public dimmer: number = null;
+	public power: number = null; // combined onOff and dimmer
 	public colorTemp: number = null; // 0, 63, 100
 	public color: string = null;
 
