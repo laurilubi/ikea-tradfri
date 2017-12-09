@@ -2,12 +2,14 @@ import { Group, TradfriClient, AccessoryTypes, Accessory } from 'node-tradfri-cl
 import { config } from "./config";
 import { Decision, DecisionMaker } from './decisionMaker';
 import { SunProvider, GeoPosition } from './sunProvider';
+import { Logger } from './logger';
 
 const tradfri = new TradfriClient(config.addr);
 const groups = {};
 const lights = {};
-const sunProvider = new SunProvider(config.geo);
-const decisionMaker = new DecisionMaker(sunProvider);
+const logger = new Logger();
+const sunProvider = new SunProvider(config.geo, logger);
+const decisionMaker = new DecisionMaker(sunProvider, logger);
 
 var handleConnect = async function (): Promise<void> {
 	log(`Connecting to ${config.addr} ...`);
@@ -130,7 +132,7 @@ var operateGroup = async function (group: Group, decision: Decision) {
 };
 
 var log = function (line) {
-	console.log(`${new Date().toISOString()}: ${line}`);
+	logger.log(line);
 };
 
 // main
