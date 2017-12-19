@@ -6,14 +6,20 @@ import { SunProvider, GeoPosition } from './sunProvider';
 import { Logger } from './logger';
 
 const tradfri = new TradfriClient(config.addr);
-const groups = {};
-const lights = {};
+var groups = {};
+var lights = {};
+var hasFullConnection = false;
 const logger = new Logger();
 const sunProvider = new SunProvider(config.geo, logger);
 const decisionMaker = new DecisionMaker(sunProvider, logger);
 const familyDetector = new FamilyDetector(config.family, logger);
 
 var handleConnect = async function (): Promise<void> {
+	tradfri.reset();
+	groups = {};
+	lights = {};
+	hasFullConnection=false;
+
 	logger.log(`Connecting to ${config.addr} ...`);
 	var result = await tradfri.connect(config.identity, config.psk);
 	if (result == false) throw new Error("Could not connect");
@@ -51,6 +57,7 @@ var handleLights = async function (): Promise<void> {
 		var doneHandler = null;
 		var done = function () {
 			//log("- lights fetched");
+			hasFullConnection = true;
 			resolve();
 		}
 
@@ -79,7 +86,7 @@ var pollForDecisions = function () {
 
 	logger.log("Polling for decisions from now on");
 	//setTimeout(makeDecisions, 1);
-	setInterval(makeDecisions, 15 * 1000);
+	setInterval(makeDecisions, 30 * 1000);
 };
 
 var makeDecisions = async function () {
@@ -100,6 +107,7 @@ var operateGroup = async function (group: Group, decision: Decision) {
 	// onOff: true
 	// };
 	// const requestSent = await tradfri.operateGroup(group, operation);
+	await guaranteeConnection();
 
 	logger.log(`Group ${group.name} (${group.instanceId}) operation ${JSON.stringify(decision)} devices=${JSON.stringify(group.deviceIDs)}`);
 	for (var deviceId of group.deviceIDs) {
@@ -139,19 +147,29 @@ var operateGroup = async function (group: Group, decision: Decision) {
 	}
 };
 
-// main
-handleConnect().then(() => {
-	handleGroups().then(() => {
-		handleLights().then(() => {
-			pollForDecisions();
+var guaranteeConnection = async function () {
+	// logger.log("Pinging gateway");
+	var isConnected = await tradfri.ping();
+	// logger.log(`isConnected=${isConnected}`);
+	if (isConnected && hasFullConnection) return;
 
-			familyDetector.updatePingStatus();
-			setInterval(function () {
-				familyDetector.updatePingStatus();
-				setTimeout(function() {
-					familyDetector.printStatusChange();
-				}, 5000);
-			}, config.family.pingInterval * 1000);
-		});
-	});
-});
+	logger.log("Ping failed, reconnecting...");
+	await handleConnect();
+	await handleGroups();
+	await handleLights();
+}
+
+// main
+guaranteeConnection().then(() => {
+	pollForDecisions();
+
+	familyDetector.updatePingStatus();
+	setInterval(function () {
+		familyDetector.updatePingStatus();
+		setTimeout(function () {
+			familyDetector.printStatusChange();
+		}, 5000);
+	}, config.family.pingInterval * 1000);
+
+	setInterval(function () { guaranteeConnection(); }, 60 * 1000);
+}).catch();
