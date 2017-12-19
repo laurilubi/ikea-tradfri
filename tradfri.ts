@@ -14,15 +14,15 @@ const decisionMaker = new DecisionMaker(sunProvider, logger);
 const familyDetector = new FamilyDetector(config.family, logger);
 
 var handleConnect = async function (): Promise<void> {
-	log(`Connecting to ${config.addr} ...`);
+	logger.log(`Connecting to ${config.addr} ...`);
 	var result = await tradfri.connect(config.identity, config.psk);
 	if (result == false) throw new Error("Could not connect");
 
-	log("Connected");
+	logger.log("Connected");
 };
 
 var handleGroups = async function (): Promise<void> {
-	log("Fetching groups...");
+	logger.log("Fetching groups...");
 	return new Promise<void>((resolve) => {
 		var doneHandler = null;
 		var done = function () {
@@ -34,7 +34,7 @@ var handleGroups = async function (): Promise<void> {
 			if (doneHandler != null) clearTimeout(doneHandler);
 			doneHandler = setTimeout(done, 500);
 
-			log(`- group ${group.instanceId} ${group.name}`);
+			logger.log(`- group ${group.instanceId} ${group.name}`);
 			groups[group.instanceId] = group;
 		};
 
@@ -46,7 +46,7 @@ var handleGroups = async function (): Promise<void> {
 };
 
 var handleLights = async function (): Promise<void> {
-	log("Fetching lights...");
+	logger.log("Fetching lights...");
 	return new Promise<void>((resolve) => {
 		var doneHandler = null;
 		var done = function () {
@@ -63,7 +63,7 @@ var handleLights = async function (): Promise<void> {
 			var power = light.onOff ? light.dimmer : 0;
 			var colorTempStr = light.colorTemperature == null ? "" : ` (${light.colorTemperature}°)`;
 			var isDeadStr = device.alive ? "" : " (dead)";
-			log(`- light ${device.instanceId} power=${power}${colorTempStr} ${device.name} ${isDeadStr}`);
+			logger.log(`- light ${device.instanceId} power=${power}${colorTempStr} ${device.name} ${isDeadStr}`);
 			lights[device.instanceId] = device;
 		};
 
@@ -77,7 +77,7 @@ var handleLights = async function (): Promise<void> {
 var pollForDecisions = function () {
 	sunProvider.getTimes(); // trigger load from external API
 
-	log("Polling for decisions from now on");
+	logger.log("Polling for decisions from now on");
 	//setTimeout(makeDecisions, 1);
 	setInterval(makeDecisions, 15 * 1000);
 };
@@ -101,7 +101,7 @@ var operateGroup = async function (group: Group, decision: Decision) {
 	// };
 	// const requestSent = await tradfri.operateGroup(group, operation);
 
-	log(`Group ${group.name} (${group.instanceId}) operation ${JSON.stringify(decision)} devices=${JSON.stringify(group.deviceIDs)}`);
+	logger.log(`Group ${group.name} (${group.instanceId}) operation ${JSON.stringify(decision)} devices=${JSON.stringify(group.deviceIDs)}`);
 	for (var deviceId of group.deviceIDs) {
 		//log(deviceId);
 		const device = lights[deviceId];
