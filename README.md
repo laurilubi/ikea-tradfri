@@ -3,11 +3,12 @@ Dynamic scheduling of ikea lights via Ikea Gateway
 
 # Features
 - Control light groups in detail
+- Auto-reconnect
 - Times based on local sunrise and sunset
+- Detect that no one is at home by wifi and mobiles
 
 # Plans
-- No one at home runs low-energy but sometimes changes happen
-- Detect that no one is at home by wifi and mobiles
+- If no one is at home, run in low-energy mode but sometimes changes happen
 
 # Installation
 - Install nodejs from https://nodejs.org/en/download/ or by any other means.
