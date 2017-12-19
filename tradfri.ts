@@ -133,14 +133,10 @@ var operateGroup = async function (group: Group, decision: Decision) {
 		}
 
 		if (success)
-			log(`CMD ${logInfo} (${deviceId} ${device.name})`);
+			logger.log(`CMD ${logInfo} (${deviceId} ${device.name})`);
 		else
-			log(`skipped ${logInfo} (${deviceId})`);
+			logger.log(`skipped ${logInfo} (${deviceId})`);
 	}
-};
-
-var log = function (line) {
-	logger.log(line);
 };
 
 // main
