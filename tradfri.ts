@@ -1,3 +1,4 @@
+import { FamilyDetector } from './familyDetector';
 import { Group, TradfriClient, AccessoryTypes, Accessory } from 'node-tradfri-client/build';
 import { config } from "./config";
 import { Decision, DecisionMaker } from './decisionMaker';
@@ -10,6 +11,7 @@ const lights = {};
 const logger = new Logger();
 const sunProvider = new SunProvider(config.geo, logger);
 const decisionMaker = new DecisionMaker(sunProvider, logger);
+const familyDetector = new FamilyDetector(config.family, logger);
 
 var handleConnect = async function (): Promise<void> {
 	log(`Connecting to ${config.addr} ...`);
@@ -146,6 +148,14 @@ handleConnect().then(() => {
 	handleGroups().then(() => {
 		handleLights().then(() => {
 			pollForDecisions();
+
+			familyDetector.updatePingStatus();
+			setInterval(function () {
+				familyDetector.updatePingStatus();
+				setTimeout(function() {
+					familyDetector.printStatusChange();
+				}, 5000);
+			}, config.family.pingInterval * 1000);
 		});
 	});
 });

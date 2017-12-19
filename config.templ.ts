@@ -1,4 +1,5 @@
 import { GeoPosition } from "./sunProvider";
+import { FamilyDetectorConfig } from "./familyDetector";
 
 export const config = {
 	addr: "GW-ABCDEFGHI123", // host name, see under the gateway; or IP address
@@ -9,5 +10,11 @@ export const config = {
 	geo: new GeoPosition({
 		latitude: 59.8546472, // Uppsala, Sweden
 		longitude: 17.6145007
+	}),
+	family: new FamilyDetectorConfig({
+		pingIps: [
+			// "192.168.1.80",
+			// "192.168.1.81"
+		]
 	})
 };
