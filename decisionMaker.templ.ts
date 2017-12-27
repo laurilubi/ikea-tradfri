@@ -1,3 +1,4 @@
+import { Decision } from './decision';
 import { SunProvider, SunInfo } from './sunProvider';
 import { Group } from 'node-tradfri-client/build';
 import * as moment from "moment";
@@ -97,13 +98,3 @@ export class DecisionMaker {
 		return time.format("HH:mm");
 	}
 }
-
-export class Decision {
-	public power: number = null; // combined onOff and dimmer
-	public colorTemp: number = null; // 0, 63, 100
-	public color: string = null;
-
-	public constructor(init?: Partial<Decision>) {
-		Object.assign(this, init);
-	}
-};

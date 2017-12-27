@@ -1,7 +1,9 @@
 import { FamilyDetector } from './familyDetector';
 import { Group, TradfriClient, AccessoryTypes, Accessory } from 'node-tradfri-client/build';
 import { config } from "./config";
-import { Decision, DecisionMaker } from './decisionMaker';
+import { Decision } from './decision';
+import { DirectController } from './directController';
+import { DecisionMaker } from './decisionMaker';
 import { SunProvider, GeoPosition } from './sunProvider';
 import { Logger } from './logger';
 
@@ -11,6 +13,7 @@ var lights = {};
 var hasFullConnection = false;
 const logger = new Logger();
 const sunProvider = new SunProvider(config.geo, logger);
+const directController = new DirectController(logger);
 const decisionMaker = new DecisionMaker(sunProvider, logger);
 const familyDetector = new FamilyDetector(config.family, logger);
 
@@ -86,7 +89,18 @@ var pollForDecisions = function () {
 
 	logger.log("Polling for decisions from now on");
 	//setTimeout(makeDecisions, 1);
+	setInterval(makeDirectDecisions, 10 * 1000);
 	setInterval(makeDecisions, 30 * 1000);
+};
+
+var makeDirectDecisions = async function () {
+	for (let groupId in groups) {
+		let group = groups[groupId];
+
+		const decision = directController.pollForDecision(group);
+		if (decision != null)
+			await operateGroup(group, decision);
+	}
 };
 
 var makeDecisions = async function () {
