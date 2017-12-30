@@ -39,7 +39,7 @@ export class DirectController {
 		return null;
 	}
 
-	private getCommand(filePath: string) {
+	private getCommand(filePath: string): string[] {
 		const fileName = Enumerable.asEnumerable(filePath.split("/")).Last();
 		const parts = fileName.split("-");
 		return parts;

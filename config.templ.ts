@@ -1,5 +1,6 @@
 import { GeoPosition } from "./sunProvider";
 import { FamilyDetectorConfig } from "./familyDetector";
+import { AwayConfig } from "./awayController";
 
 export const config = {
 	addr: "GW-ABCDEFGHI123", // host name, see under the gateway; or IP address
@@ -15,6 +16,15 @@ export const config = {
 		pingIps: [
 			// "192.168.1.80",
 			// "192.168.1.81"
+		]
+	}),
+	away: new AwayConfig({
+		primaryGroupNames: [
+			"Living room",
+			"Bed room"
+		],
+		secondaryGroupNames:[
+			"Other room"
 		]
 	})
 };

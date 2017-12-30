@@ -6,6 +6,7 @@ import { DirectController } from './directController';
 import { DecisionMaker } from './decisionMaker';
 import { SunProvider, GeoPosition } from './sunProvider';
 import { Logger } from './logger';
+import { AwayController } from './awayController';
 
 const tradfri = new TradfriClient(config.addr);
 var groups = {};
@@ -16,12 +17,15 @@ const sunProvider = new SunProvider(config.geo, logger);
 const directController = new DirectController(logger);
 const decisionMaker = new DecisionMaker(sunProvider, logger);
 const familyDetector = new FamilyDetector(config.family, logger);
+const awayController = new AwayController(config.away, groups, familyDetector, logger);
 
 var handleConnect = async function (): Promise<void> {
 	tradfri.reset();
-	groups = {};
-	lights = {};
-	hasFullConnection=false;
+	for (var key in groups)
+		delete groups[key];
+	for (var key in lights)
+		delete lights[key];
+	hasFullConnection = false;
 
 	logger.log(`Connecting to ${config.addr} ...`);
 	var result = await tradfri.connect(config.identity, config.psk);
@@ -87,9 +91,13 @@ var handleLights = async function (): Promise<void> {
 var pollForDecisions = function () {
 	sunProvider.getTimes(); // trigger load from external API
 
+	familyDetector.FamilyLeft.on(() => { awayController.onFamilyLeft(operateGroup); });
+	familyDetector.FamilyReturned.on(() => { awayController.onFamilyReturned(operateGroup); });
+
 	logger.log("Polling for decisions from now on");
-	//setTimeout(makeDecisions, 1);
-	setInterval(makeDirectDecisions, 10 * 1000);
+	setInterval(makeDirectDecisions, 5 * 1000);
+
+	// setTimeout(makeDecisions, 5 * 1000);
 	setInterval(makeDecisions, 30 * 1000);
 };
 
@@ -109,6 +117,10 @@ var makeDecisions = async function () {
 	for (let groupId in groups) {
 		let group = groups[groupId];
 
+		const awayDecision = awayController.makeDecision(group);
+		if (awayDecision != null)
+			await operateGroup(group, awayDecision);
+
 		const decision = decisionMaker.makeDecision(group);
 		if (decision != null)
 			await operateGroup(group, decision);
@@ -123,7 +135,7 @@ var operateGroup = async function (group: Group, decision: Decision) {
 	// const requestSent = await tradfri.operateGroup(group, operation);
 	await guaranteeConnection();
 
-	logger.log(`Group ${group.name} (${group.instanceId}) operation ${JSON.stringify(decision)} devices=${JSON.stringify(group.deviceIDs)}`);
+	// logger.log(`Group ${group.name} (${group.instanceId}) operation ${JSON.stringify(decision)} devices=${JSON.stringify(group.deviceIDs)}`);
 	for (var deviceId of group.deviceIDs) {
 		//log(deviceId);
 		const device = lights[deviceId];
@@ -155,9 +167,9 @@ var operateGroup = async function (group: Group, decision: Decision) {
 		}
 
 		if (success)
-			logger.log(`CMD ${logInfo} (${deviceId} ${device.name})`);
-		else
-			logger.log(`skipped ${logInfo} (${deviceId})`);
+			logger.log(`COMMAND ${logInfo} (${deviceId} ${device.name})`);
+		// else
+		// 	logger.log(`skipped ${logInfo} (${deviceId})`);
 	}
 };
 

@@ -2,6 +2,7 @@ import { SunProvider, SunInfo } from './sunProvider';
 import * as moment from 'moment';
 import * as babel from 'babel-polyfill';
 import { Logger } from './logger';
+import { LiteEvent } from './liteEvent';
 import * as nmap from 'node-nmap';
 
 export class FamilyDetector {
@@ -10,6 +11,10 @@ export class FamilyDetector {
 	private lastSeens: object = {};
 	private assumeState: boolean = true;
 	private prevStatus: string = null;
+	private prevIsFamilyAtHome: boolean = null;
+	private readonly onFamilyLeft = new LiteEvent<void>();
+	private readonly onFamilyReturned = new LiteEvent<void>();
+	private readonly initTime = new Date();
 
 	constructor(config: FamilyDetectorConfig, logger: Logger) {
 		this.config = config;
@@ -25,6 +30,30 @@ export class FamilyDetector {
 			return true;
 		}
 		return false;
+	}
+
+	public get FamilyLeft() { return this.onFamilyLeft.expose(); }
+	public get FamilyReturned() { return this.onFamilyReturned.expose(); }
+
+	private checkTriggerEvents(): void {
+		if (moment(this.initTime).add(5, "seconds") > moment()) {
+			this.logger.log("Skipping family event during the first 5 seconds. Initial nmap scan might be in progress.");
+			return;
+		}
+
+		var newIsFamilyAtHome = this.isFamilyAtHome();
+		if (newIsFamilyAtHome === this.prevIsFamilyAtHome) return;
+
+		if (this.prevIsFamilyAtHome === null) {
+			this.prevIsFamilyAtHome = newIsFamilyAtHome;
+			return;
+		}
+
+		if (newIsFamilyAtHome)
+			this.onFamilyReturned.trigger();
+		else
+			this.onFamilyLeft.trigger();
+		this.prevIsFamilyAtHome = newIsFamilyAtHome;
 	}
 
 	private getLastSeen(ip: string): Date {
@@ -57,10 +86,13 @@ export class FamilyDetector {
 					self.lastSeens[aliveIp] = new Date();
 					// self.logger.log(`Alive host ${aliveIp}`);
 				}
+				self.checkTriggerEvents();
 			}).on("error", function (error) {
 				self.logger.log(`nmap error: ${error}`);
+				self.checkTriggerEvents();
 			});
 		}
+		self.checkTriggerEvents();
 	}
 
 	public printStatus(): void {
