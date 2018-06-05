@@ -19,6 +19,8 @@ For kali linux, run:
 
 `sudo apt-get install -y nodejs`
 
+`node -v`
+
 - Install global nodejs packages
 
 `npm install -g typescript ts-node`
@@ -33,7 +35,7 @@ These can also be global if you want.
 
 `cd /ikea` # or any new folder
 
-`npm install node-tradfri-client babel-polyfill moment axios`
+`npm install node-tradfri-client babel-polyfill moment axios node-nmap list-files-in-dir linq-es2015`
 
 - Set your configuration
 
